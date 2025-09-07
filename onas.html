@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <link rel="stylesheet" href="slideshow.css">
+  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>O nás | Stavebniny Lhotský</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet"/>
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&display=swap');
+</style>
+</head>
+<body>
+  <div class="obsah">
+    <header>
+      <div class="nav-container">
+        <div class="logo">
+         <a href="index.html">
+           <img src="images/logo.png" alt="Logo">
+         </a>
+        </div>
+        <button class="nav-toggle" aria-label="Otevřít menu">
+          <span class="hamburger"></span>
+        </button>
+       <nav class="main-nav">
+         <ul>
+           <li><a href="index.html">Úvod</a></li>
+           <li><a href="onas.html">O nás</a></li>
+           <li><a href="sluzby.html">Služby</a></li>
+           <li><a href="cenik.html">Ceník</a></li>
+           <div class="tlacitko">
+           <li><a href="kontakt.html">Kontakt</a></li>
+          </div>
+         </ul>
+       </nav>
+       <button id="themeToggle" class="theme-toggle" aria-label="Přepnout motiv" title="Přepnout motiv">☀️</button>
+      </div>
+     <img src="images/obujte se s námi.png" alt="Baner" class="responsive-banner">
+   </header>
+<main>
+  <section class="about-us reveal" style="max-width: 800px; margin: 0 auto; padding: 1.5rem 1rem; font-family: 'Inter', sans-serif; line-height: 1.6;">
+    <h2>O nás</h2>
+    <p>Jsme stavebniny s nohama na zemi – dodáváme materiál, kterému věříme, a jednáme tak, jak bychom chtěli, aby někdo jednal s námi.</p>
+
+    <p>Máme za sebou 30 let zkušeností v oboru a víme, že stavba se neřídí podle katalogu – proto nabízíme nejen kvalitní zboží, ale hlavně rychlé dodání, férové ceny a osobní přístup.</p>
+
+    <p>Ať už stavíte dům, garáž nebo plot, jsme tu, abychom vám poradili i pomohli. Stavění není jen o betonu a cihlách – je to o důvěře.</p>
+
+    <p style="font-weight: 500; font-size: 1.2rem; margin-top: 1.2rem;">Stavte s námi.</p>
+  </section>
+  
+  <section class="reviews reveal">
+    <h2>Co o nás říkají zákazníci</h2>
+    
+    <div class="review">
+      <p>"Perfektní služby, dobré ceny i zboží , velký výběr , prostě cajk.👍"</p>
+      <span>⭐⭐⭐⭐⭐ – Jaromír Pecník.</span>
+    </div>
+
+    <div class="review">
+      <p>"Poměrně široká nabídka sortimentu za příznivé ceny. Prodávající velice ochotná s příjemným vystupováním. Poradí, doporučí, vysvětlí. Možnost parkování v areálu stavebnictví případně u prodejny Lidl, která se nachází před."</p>
+      <span>⭐⭐⭐⭐⭐ – Zlatí Paprstková</span>
+    </div>
+
+    <div class="review">
+      <p>"Velice ochotné prodávající, které se snaží vyjít vstříc"</p>
+      <span>⭐⭐⭐⭐⭐ – Božula Pytlíková</span>
+    </div>
+  </section>
+  
+  <section class="container reveal">
+	<div class="slider-wrapper">
+    <button class="slider-btn left">&#10094;</button>
+    <button class="slider-btn right">&#10095;</button>
+		<div class="slider">
+			<img id="slide-1" src="images/interier.png" />
+			<img id="slide-2" src="images/exterier.png" />
+			<img id="slide-3" src="images/2020-11-26.png" />
+		</div>
+		<div class="slider-nav">
+			<a href="#slide-1"></a>
+			<a href="#slide-2"></a>
+			<a href="#slide-3"></a>
+		</div>
+	</div>
+</section>
+</main>
+<footer>
+  &copy; 2025 Stavebniny Lhotský
+</footer>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const wrapper  = document.querySelector('.slider-wrapper');
+    const slider   = wrapper.querySelector('.slider');
+    const slides   = slider.querySelectorAll('img');
+    const btnLeft  = wrapper.querySelector('.slider-btn.left');
+    const btnRight = wrapper.querySelector('.slider-btn.right');
+    const slideCnt = slides.length;
+
+    let current = 0;
+
+    function goTo(index) {
+      slider.scrollTo({
+        left: wrapper.clientWidth * index,
+        behavior: 'smooth'
+      });
+      current = index;
+    }
+
+    btnRight.addEventListener('click', () => {
+      goTo((current + 1) % slideCnt);
+    });
+
+    btnLeft.addEventListener('click', () => {
+      goTo((current - 1 + slideCnt) % slideCnt);
+    });
+
+    window.addEventListener('resize', () => goTo(current));
+  });
+</script>
+<script>
+  const navToggle = document.querySelector('.nav-toggle');
+  const mainNav = document.querySelector('.main-nav');
+
+  navToggle.addEventListener('click', () => {
+    mainNav.classList.toggle('show');
+  });
+
+  // Motiv (light/dark)
+  (function(){
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const stored = localStorage.getItem('theme');
+    const initial = stored || (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', initial);
+    const btn = document.getElementById('themeToggle');
+    if(btn){
+      btn.textContent = initial === 'dark' ? '🌙' : '☀️';
+      btn.addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        btn.textContent = next === 'dark' ? '🌙' : '☀️';
+      });
+    }
+  })();
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('show');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

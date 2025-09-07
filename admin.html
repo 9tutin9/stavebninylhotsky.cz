@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin | Stavebniny Lhotský</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .admin-wrap{max-width:1100px;margin:40px auto;padding:0 20px}
+    .admin-grid{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start}
+    .admin-card{background:var(--color-surface);border:1px solid rgba(0,0,0,.06);border-radius:12px;box-shadow:var(--shadow-sm);padding:16px}
+    .admin-card h2{margin:0 0 10px 0}
+    .muted{color:var(--color-muted)}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px}
+    .toolbar input,.toolbar select{padding:8px 10px;border:1px solid #ddd;border-radius:8px}
+    .btn{background:var(--color-primary);color:#fff;border:none;border-radius:8px;padding:10px 14px;cursor:pointer}
+    .btn.secondary{background:#111827;color:#fff}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+    tr:hover{background:rgba(0,0,0,.02)}
+    .right{float:right}
+    .thumb{width:56px;height:42px;object-fit:cover;border-radius:6px;background:#f4f4f4}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .form-grid label{font-weight:600;display:flex;flex-direction:column;gap:6px;line-height:1.25}
+    .form-grid label.row{display:flex;flex-direction:column;align-items:stretch}
+    .form-grid input,.form-grid textarea,.form-grid select{padding:10px;border:1px solid #ddd;border-radius:8px;width:100%;min-width:0}
+    .form-grid textarea{min-height:84px;resize:vertical}
+    /* Galerie obrázků */
+    .gallery-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:1400;padding:10px}
+    .gallery-modal.show{display:flex}
+    .gallery-dialog{background:var(--color-surface);color:var(--color-text);width:min(920px,96vw);max-height:88vh;border-radius:12px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column}
+    .gallery-header{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:10px 12px;border-bottom:1px solid rgba(0,0,0,.06)}
+    .gallery-search{display:flex;gap:8px;align-items:center}
+    .gallery-search input{padding:8px 10px;border:1px solid #ddd;border-radius:8px}
+    .gallery-grid{padding:12px;display:grid;gap:10px;grid-template-columns:repeat(6,1fr);overflow:auto}
+    .g-item{border:1px solid rgba(0,0,0,.08);border-radius:10px;overflow:hidden;background:#fff;cursor:pointer}
+    .g-item img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+    .g-name{font-size:.8rem;padding:6px 8px;color:#444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    @media(max-width:900px){.gallery-grid{grid-template-columns:repeat(3,1fr)}}
+    .row{display:flex;gap:10px;align-items:center}
+    .danger{background:#b91c1c}
+    @media(max-width:900px){.admin-grid{grid-template-columns:1fr}}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script></script>
+</head>
+<body>
+  <div class="obsah">
+    <header>
+      <div class="nav-container">
+        <div class="logo"><a href="index.html"><img src="images/logo.png" alt="Logo"></a></div>
+        <nav class="main-nav"><ul><li><a href="index.html">Úvod</a></li></ul></nav>
+        <button id="logoutTop" class="btn secondary" style="display:none">Odhlásit</button>
+      </div>
+    </header>
+    <main class="admin-wrap">
+      <section id="authView" class="admin-card" style="max-width:420px;margin:20px auto;display:none">
+        <h2>Přihlášení</h2>
+        <form id="loginForm" class="form-grid" style="grid-template-columns:1fr">
+          <label>E‑mail<input id="loginEmail" type="email" required></label>
+          <label>Heslo<input id="loginPassword" type="password" required></label>
+          <button class="btn" type="submit">Přihlásit</button>
+        </form>
+        <p class="muted" style="margin-top:8px">Po přihlášení Vám nastavím roli admin v Supabase.</p>
+      </section>
+      <section id="noAccess" class="admin-card" style="display:none;text-align:center">
+        <h2>Přístup odepřen</h2>
+        <p class="muted">Tento účet nemá roli administrátora.</p>
+        <button id="logoutBtn1" class="btn secondary">Odhlásit</button>
+      </section>
+      <div id="appView" class="admin-grid" style="display:none">
+        <section class="admin-card">
+          <h2>Produkty <button id="logoutBtn" class="btn secondary right">Odhlásit</button></h2>
+          <div class="toolbar">
+            <input id="q" type="search" placeholder="Hledat…">
+            <select id="cat"></select>
+            <button class="btn" onclick="loadProducts()">Načíst</button>
+          </div>
+          <div style="overflow:auto">
+            <table id="tbl">
+              <thead><tr><th>Obrázek</th><th>Název</th><th>Kategorie</th><th>Cena s DPH</th><th class="right">Akce</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+        <aside class="admin-card">
+          <h2 id="formTitle">Nový produkt</h2>
+          <div class="form-grid">
+            <label>Název<input id="name"></label>
+            <label>Jednotka
+              <input id="unit" list="units-list" placeholder="např. ks, m², bm, kg, m³">
+            </label>
+            <label>Cena bez DPH<input id="price_wo" type="number" step="0.01"></label>
+            <label>DPH (%)<input id="vat" type="number" step="1" value="21"></label>
+            <label>Cena s DPH<input id="price_w" type="number" step="0.01"></label>
+            <label>Kategorie<select id="category"></select></label>
+            <label>Pořadí<input id="order_index" type="number" step="1" placeholder="auto"></label>
+            <label class="row">Obrázek URL
+              <div class="row" style="gap:8px;align-items:stretch">
+                <input id="image_url" placeholder="https://…">
+                <button id="pickImageBtn" class="btn secondary" type="button" style="white-space:nowrap">Vybrat</button>
+              </div>
+            </label>
+            <datalist id="units-list">
+              <option value="ks"></option>
+              <option value="m²"></option>
+              <option value="m2"></option>
+              <option value="m³"></option>
+              <option value="m3"></option>
+              <option value="bm"></option>
+              <option value="Bm"></option>
+              <option value="kg"></option>
+              <option value="t"></option>
+              <option value="l"></option>
+              <option value="paleta"></option>
+            </datalist>
+            <label style="grid-column:1/-1">Popis<textarea id="description" rows="3"></textarea></label>
+            <label style="grid-column:1/-1">Poznámka<textarea id="note" rows="2"></textarea></label>
+          </div>
+          <div class="row" style="margin-top:10px;justify-content:space-between">
+            <div>
+              <button class="btn" onclick="saveProduct()">Uložit</button>
+              <button class="btn secondary" onclick="resetForm()">Zrušit</button>
+            </div>
+            <button id="delBtn" class="btn danger" style="display:none" onclick="delProduct()">Smazat</button>
+          </div>
+        </aside>
+      </div>
+    </main>
+    <footer>&copy; 2025 Stavebniny Lhotský</footer>
+  </div>
+
+  <script>
+    const STORAGE_BUCKET = 'images'; // název bucketu v Supabase Storage
+    let editingId = null;
+    let lastEditedPrice = 'w'; // 'wo' = bez DPH, 'w' = s DPH
+
+    // Pomocné funkce dostupné globálně
+    function toNum(v){ const n = parseFloat(String(v).replace(',', '.')); return isFinite(n)? n : 0; }
+    function calcW(wo, vat){ return Math.round( toNum(wo) * (1 + toNum(vat)/100) ); }
+    function calcWo(w, vat){ const denom = 1 + toNum(vat)/100; return denom>0 ? Math.round( toNum(w) / denom ) : 0; }
+
+    async function initApp(){
+      await loadCategories();
+      await loadProducts();
+
+      const elWo = document.getElementById('price_wo');
+      const elW  = document.getElementById('price_w');
+      const elVat= document.getElementById('vat');
+
+      elWo.addEventListener('input', ()=>{ lastEditedPrice='wo'; elW.value = String( calcW(elWo.value, elVat.value) ); });
+      elW.addEventListener('input',  ()=>{ lastEditedPrice='w';  elWo.value= String( calcWo(elW.value,  elVat.value) ); });
+      elVat.addEventListener('input',()=>{
+        if(lastEditedPrice==='wo') elW.value  = String( calcW(elWo.value, elVat.value) );
+        else                       elWo.value = String( calcWo(elW.value,  elVat.value) );
+      });
+    }
+
+    function show(el, v){ el.style.display = v? '' : 'none'; }
+
+    async function isCurrentUserAdmin(){
+      const { data: sessionData } = await window.supabase.auth.getSession();
+      const user = sessionData && sessionData.session && sessionData.session.user;
+      if(!user) return false;
+      const { data } = await window.supabase.from('profiles').select('role').eq('user_id', user.id).maybeSingle();
+      return data && data.role === 'admin';
+    }
+
+    async function checkAuth(){
+      const authView = document.getElementById('authView');
+      const appView = document.getElementById('appView');
+      const noAccess = document.getElementById('noAccess');
+      const logoutTop = document.getElementById('logoutTop');
+
+      const { data: { session } } = await window.supabase.auth.getSession();
+      if(!session){
+        show(authView, true); show(appView, false); show(noAccess, false); show(logoutTop, false);
+        return;
+      }
+      const ok = await isCurrentUserAdmin();
+      if(ok){
+        show(authView, false); show(noAccess, false); show(appView, true); show(logoutTop, true);
+        await initApp();
+      } else {
+        show(authView, false); show(appView, false); show(noAccess, true); show(logoutTop, true);
+      }
+    }
+
+    async function loadCategories(){
+      const { data, error } = await window.supabase.from('categories').select('*').order('order_index', { ascending: true });
+      if(error){ alert('Chyba kategorií: '+error.message); return; }
+      const selCat = document.getElementById('cat');
+      const selForm = document.getElementById('category');
+      selCat.innerHTML = '<option value="">Vše</option>' + data.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+      selForm.innerHTML = data.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    }
+
+    function qVal(id){ return document.getElementById(id).value.trim(); }
+
+    async function loadProducts(){
+      const q = qVal('q');
+      const cat = qVal('cat');
+      let query = window.supabase.from('products').select('*').order('order_index', { ascending: true });
+      if(cat) query = query.eq('category_id', cat);
+      if(q) query = query.ilike('name', `%${q}%`);
+      const { data, error } = await query;
+      if(error){ alert('Chyba produktů: '+error.message); return; }
+      renderTable(data||[]);
+    }
+
+    function renderTable(items){
+      const tbody = document.querySelector('#tbl tbody');
+      tbody.innerHTML = (items.length? items.map(p=>`
+        <tr>
+          <td>${p.image_url?`<img class="thumb" src="${p.image_url}" alt="">`:''}</td>
+          <td>${p.name}${p.unit?` <span class="muted">(${p.unit})</span>`:''}</td>
+          <td>${p.category_id||''}</td>
+          <td>${Number(p.price_with_vat||0).toLocaleString('cs-CZ',{style:'currency',currency:'CZK'})}</td>
+          <td class="right"><button class="btn secondary" onclick='editProduct(${JSON.stringify(p)})'>Upravit</button></td>
+        </tr>
+      `).join('') : '<tr><td colspan="5" class="muted">Žádné položky</td></tr>');
+    }
+
+    function editProduct(p){
+      editingId = p.id;
+      document.getElementById('formTitle').textContent = 'Upravit produkt';
+      for(const [k,v] of Object.entries({name:p.name, unit:p.unit, price_wo:p.price_without_vat, vat:p.vat_rate, category:p.category_id, order_index:p.order_index, image_url:p.image_url, description:p.description, note:p.note})){
+        const el = document.getElementById(String(k)); if(el) el.value = v ?? '';
+      }
+      // doplníme cenu s DPH do formuláře
+      const elW = document.getElementById('price_w');
+      const elWo = document.getElementById('price_wo');
+      const elVat = document.getElementById('vat');
+      if(elW && typeof p.price_with_vat !== 'undefined' && p.price_with_vat !== null){
+        elW.value = String(p.price_with_vat);
+        lastEditedPrice = 'w';
+      } else {
+        // vypočítej ze stávající bez DPH
+        elW.value = String(Math.round(toNum(elWo.value) * (1 + toNum(elVat.value)/100)));
+        lastEditedPrice = 'wo';
+      }
+      document.getElementById('delBtn').style.display = 'inline-block';
+    }
+
+    function resetForm(){
+      editingId = null;
+      document.getElementById('formTitle').textContent = 'Nový produkt';
+      ['name','unit','price_wo','price_w','vat','category','order_index','image_url','description','note'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.value = id==='vat'?'21': ''; }});
+      document.getElementById('delBtn').style.display = 'none';
+    }
+
+    async function saveProduct(){
+      const name = qVal('name');
+      if(!name){ alert('Zadejte název'); return; }
+      const elWo = document.getElementById('price_wo');
+      const elW  = document.getElementById('price_w');
+      const elVat= document.getElementById('vat');
+
+      // dopočty obou cen dle vyplnění
+      let priceWithout = toNum(elWo.value);
+      let priceWith    = toNum(elW.value);
+      const vatRate    = toNum(elVat.value);
+      if(!priceWithout && priceWith){ priceWithout = Math.round(priceWith / (1 + vatRate/100)); }
+      if(!priceWith){ priceWith = Math.round(priceWithout * (1 + vatRate/100)); }
+
+      // vypočítat pořadí, pokud není vyplněno
+      let orderIndexStr = qVal('order_index');
+      let orderIndex = orderIndexStr ? Number(orderIndexStr) : null;
+      const categorySel = qVal('category');
+      if(orderIndex === null){
+        // zjisti max pořadí v rámci vybrané kategorie (nebo celkově, pokud kategorie není)
+        let q = window.supabase.from('products').select('order_index').order('order_index', { ascending: false }).limit(1);
+        if(categorySel){ q = q.eq('category_id', Number(categorySel)); }
+        const { data: maxRows, error: maxErr } = await q;
+        if(maxErr){ console.warn('Nelze zjistit max pořadí:', maxErr.message); orderIndex = 0; }
+        else { orderIndex = ((maxRows && maxRows[0] && Number(maxRows[0].order_index)) || 0) + 1; }
+      }
+
+      const payload = {
+        name,
+        unit: qVal('unit')||null,
+        price_without_vat: priceWithout,
+        vat_rate: vatRate || 21,
+        price_with_vat: priceWith,
+        category_id: qVal('category')? Number(qVal('category')): null,
+        order_index: orderIndex,
+        image_url: qVal('image_url')||null,
+        description: qVal('description')||null,
+        note: qVal('note')||null
+      };
+
+      let res;
+      if(editingId){
+        res = await window.supabase.from('products').update(payload).eq('id', editingId).select();
+      } else {
+        res = await window.supabase.from('products').insert(payload).select();
+      }
+      if(res.error){ alert('Chyba ulozeni: '+res.error.message); return; }
+      resetForm();
+      loadProducts();
+    }
+
+    async function delProduct(){
+      if(!editingId) return;
+      if(!confirm('Opravdu smazat?')) return;
+      const { error } = await window.supabase.from('products').delete().eq('id', editingId);
+      if(error){ alert('Chyba smazání: '+error.message); return; }
+      resetForm();
+      loadProducts();
+    }
+
+    // Auth handlery
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      const form = document.getElementById('loginForm');
+      if(form){
+        form.addEventListener('submit', async (e)=>{
+          e.preventDefault();
+          const email = document.getElementById('loginEmail').value.trim();
+          const password = document.getElementById('loginPassword').value;
+          const { error } = await window.supabase.auth.signInWithPassword({ email, password });
+          if(error){ alert('Přihlášení selhalo: '+error.message); return; }
+          checkAuth();
+        });
+      }
+      const lo = document.getElementById('logoutBtn');
+      if(lo){ lo.addEventListener('click', async ()=>{ await window.supabase.auth.signOut(); checkAuth(); }); }
+      const lo1 = document.getElementById('logoutBtn1');
+      if(lo1){ lo1.addEventListener('click', async ()=>{ await window.supabase.auth.signOut(); checkAuth(); }); }
+      const loTop = document.getElementById('logoutTop');
+      if(loTop){ loTop.addEventListener('click', async ()=>{ await window.supabase.auth.signOut(); checkAuth(); }); }
+      window.supabase.auth.onAuthStateChange(()=>{ checkAuth(); });
+      checkAuth();
+
+      // Galerie – otevření a naplnění
+      const pickBtn = document.getElementById('pickImageBtn');
+      if(pickBtn){ pickBtn.addEventListener('click', openGallery); }
+    });
+
+    // Galerie obrázků ze Storage
+    let galleryEl;
+    async function openGallery(){
+      if(!galleryEl){
+        galleryEl = document.createElement('div');
+        galleryEl.id = 'galleryModal';
+        galleryEl.className = 'gallery-modal';
+        galleryEl.innerHTML = `
+          <div class="gallery-dialog" role="dialog" aria-modal="true">
+            <div class="gallery-header">
+              <strong>Vybrat obrázek</strong>
+              <div class="gallery-search">
+                <input id="galSearch" type="search" placeholder="Hledat…">
+                <button id="galClose" class="btn secondary" type="button">Zavřít</button>
+              </div>
+            </div>
+            <div id="galGrid" class="gallery-grid"></div>
+          </div>`;
+        document.body.appendChild(galleryEl);
+        galleryEl.addEventListener('click', (e)=>{ if(e.target===galleryEl) closeGallery(); });
+        galleryEl.querySelector('#galClose').addEventListener('click', closeGallery);
+        galleryEl.querySelector('#galSearch').addEventListener('input',()=>renderGallery(window.__galItems||[], galleryEl.querySelector('#galSearch').value));
+      }
+      galleryEl.classList.add('show');
+      await loadGalleryItems();
+    }
+    function closeGallery(){ if(galleryEl) galleryEl.classList.remove('show'); }
+
+    async function loadGalleryItems(){
+      const grid = galleryEl.querySelector('#galGrid');
+      grid.innerHTML = '<p class="muted">Načítám…</p>';
+      const { data, error } = await window.supabase.storage.from(STORAGE_BUCKET).list('', { limit: 1000, sortBy: { column: 'name', order: 'asc' } });
+      if(error){ grid.innerHTML = `<p class="muted">Chyba načítání: ${error.message}</p>`; return; }
+      const items = (data||[]).filter(f => !f.name.endsWith('/') && /\.(png|jpe?g|webp|gif|svg)$/i.test(f.name));
+      // Získej public URL pro každý soubor
+      const withUrls = items.map(it=>{
+        const { data:pub } = window.supabase.storage.from(STORAGE_BUCKET).getPublicUrl(it.name);
+        return { name: it.name, url: pub.publicUrl };
+      });
+      window.__galItems = withUrls;
+      renderGallery(withUrls, galleryEl.querySelector('#galSearch').value||'');
+    }
+
+    function renderGallery(items, q){
+      const grid = galleryEl.querySelector('#galGrid');
+      const query = String(q||'').toLowerCase();
+      const list = query? items.filter(i=> i.name.toLowerCase().includes(query)) : items;
+      if(!list.length){ grid.innerHTML = '<p class="muted">Žádné položky</p>'; return; }
+      grid.innerHTML = list.map(i=>`
+        <div class="g-item" data-url="${i.url}" title="${i.name}">
+          <img loading="lazy" decoding="async" src="${i.url}" alt="${i.name}">
+          <div class="g-name">${i.name}</div>
+        </div>
+      `).join('');
+      grid.querySelectorAll('.g-item').forEach(el=>{
+        el.addEventListener('click', ()=>{
+          const url = el.getAttribute('data-url');
+          const input = document.getElementById('image_url');
+          if(input){ input.value = url; }
+          closeGallery();
+        });
+      });
+    }
+  </script>
+</body>
+</html>
+
+

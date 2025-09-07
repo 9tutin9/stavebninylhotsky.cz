@@ -1,0 +1,203 @@
+/* Styl pro ceník */
+.cenik-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Inter', 'Manrope', 'Roboto', sans-serif;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .cenik-table thead {
+    background-color: var(--color-primary);
+    color: #fff;
+  }
+  
+  .cenik-table th, 
+  .cenik-table td {
+    padding: 10px 14px;
+    text-align: left;
+  }
+  
+  .cenik-table th {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  
+  .cenik-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .cenik-table tbody tr:hover {
+    background-color: #fff7ec;
+    transition: background-color 0.2s ease-in-out, transform .12s ease;
+    transform: scale(1.002);
+  }
+  
+  .cenik-table td {
+    font-size: 0.93rem;
+    color: #333;
+    border-bottom: 1px solid #eee;
+  }
+  
+  /* Text "Aktualizováno" */
+  .cenik-update {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #666;
+    font-style: italic;
+  }
+  
+  /* Responzivní zobrazení pro mobily */
+  @media (max-width: 600px) {
+    .cenik-table thead {
+      display: none; /* schová hlavičku */
+    }
+    .cenik-table, 
+    .cenik-table tbody, 
+    .cenik-table tr, 
+    .cenik-table td {
+      display: block;
+      width: 100%;
+    }
+    .cenik-table tr {
+      margin-bottom: 12px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    .cenik-table td {
+      padding: 8px 14px;
+      text-align: right;
+      position: relative;
+      border: none;
+      border-bottom: 1px solid #eee;
+    }
+    .cenik-table td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 14px;
+      font-weight: 600;
+      text-align: left;
+      color: #004a2f;
+    }
+  }
+  .cenik h2 {
+    text-transform: capitalize;
+}
+
+/* Styl pro ceník */
+.cenik-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Inter', 'Manrope', 'Roboto', sans-serif;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .cenik-table thead {
+    background-color: var(--color-primary);
+    color: #fff;
+  }
+  
+  .cenik-table th, 
+  .cenik-table td {
+    padding: 10px 14px;
+    text-align: left;
+  }
+  
+  .cenik-table th {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  
+  .cenik-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .cenik-table tbody tr:hover {
+    background-color: #fff7ec;
+    transition: background-color 0.2s ease-in-out, transform .12s ease;
+    transform: scale(1.002);
+  }
+  
+  .cenik-table td {
+    font-size: 0.93rem;
+    color: #333;
+    border-bottom: 1px solid #eee;
+  }
+  
+  /* Text "Aktualizováno" */
+  .cenik-update {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #666;
+    font-style: italic;
+  }
+  
+  /* Responzivní zobrazení pro mobily */
+  @media (max-width: 600px) {
+    .cenik-table thead {
+      display: none; /* schová hlavičku */
+    }
+    .cenik-table, 
+    .cenik-table tbody, 
+    .cenik-table tr, 
+    .cenik-table td {
+      display: block;
+      width: 100%;
+      font-size: 0.6rem;
+    }
+    .cenik-table tr {
+      margin-bottom: 12px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    .cenik-table td {
+      padding: 8px 14px;
+      text-align: right;
+      position: relative;
+      border: none;
+      border-bottom: 1px solid #eee;
+    }
+    .cenik-table td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 14px;
+      font-weight: 600;
+      text-align: left;
+      color: #004a2f;
+    }
+  }
+  .cenik h2 {
+    text-transform: capitalize;
+}
+@media (max-width: 600px) {
+    .cenik-table td {
+      padding: 8px 14px 8px 150px; /* menší padding-left než 90px */
+      position: relative;
+      text-align: left;
+    }
+  
+    .cenik-table td::before {
+      left: 14px;
+      width: 45px;
+      padding-right: 10px;
+      white-space: nowrap;
+      font-weight: 600;
+      color: #004a2f;
+      text-align: right;
+    }
+  }
+/* Dark overrides */
+html[data-theme='dark'] .cenik-table { background-color: var(--color-surface); }
+html[data-theme='dark'] .cenik-table td { color: var(--color-text); border-bottom-color: rgba(255,255,255,0.08); }
+html[data-theme='dark'] .cenik-table tbody tr:nth-child(even) { background-color: rgba(255,255,255,0.02); }
+html[data-theme='dark'] .cenik-table tbody tr:hover { background-color: rgba(255,255,255,0.06); }
+html[data-theme='dark'] .cenik-table td::before { color: #e5e7eb; }

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <link rel="icon" type="image/png" href="/images/Untitled (1).png">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="kontakt.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stavebniny Lhotský</title>
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&display=swap');
+</style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+</head>
+
+<body>
+  <div class="obsah">
+   <a id="adminFloating" href="admin.html#login" style="position:fixed; top:6px; left:6px; z-index:1201; font-size:11px; opacity:.55; padding:2px 6px; border-radius:6px; background:rgba(0,0,0,.04); color:#111827;">Admin</a>
+   <header>
+      <div class="nav-container">
+        <div class="logo">
+         <a href="index.html">
+           <img src="images/logo.png" alt="Logo">
+         </a>
+        </div>
+        <button class="nav-toggle" aria-label="Otevřít menu">
+          <span class="hamburger"></span>
+        </button>
+       <nav class="main-nav">
+         <ul>
+           <li><a href="index.html">Úvod</a></li>
+           <li><a href="onas.html">O nás</a></li>
+           <li><a href="sluzby.html">Služby</a></li>
+           <li><a href="cenik.html">Ceník</a></li>
+           <div class="tlacitko">
+           <li><a href="kontakt.html">Kontakt</a></li>
+          </div>
+          
+         </ul>
+       </nav>
+       <button id="themeToggle" class="theme-toggle" aria-label="Přepnout motiv" title="Přepnout motiv">☀️</button>
+      </div>
+     <img src="images/obujte se s námi.png" alt="Baner" class="responsive-banner">
+   </header>
+
+   <div class="hero reveal">
+     <h2>KVALITNÍ STAVEBNÍ MATERIÁL ZA ROZUMNÉ CENY</h2>
+   </div>
+
+   <main>
+    <div id="produkty-grid" class="reveal stagger">
+      <a href="cenik.html" class="block">
+        <img src="images/506868DF-12A4-469E-8FB5-EC186B20122E.png" alt="cement" loading="lazy">
+        <span>sypké směsy</span>
+      </a>
+    
+      <a href="cenik.html" class="block">
+        <img src="images/BBBCB38E-3D9A-4C44-882F-A958C029B9C8.png" alt="doplňky" loading="lazy">
+        <span>doplňky</span>
+      </a>
+    
+      <a href="cenik.html" class="block">
+        <img src="images/pngegg.png" alt="betonové výrobky" loading="lazy">
+        <span>betonové výrobky</span>
+      </a>
+    
+      <a href="cenik.html" class="block">
+        <img src="images/IMG_0347.JPG" alt="ochranné pomůcky" loading="lazy">
+        <span>ochranné pomůcky</span>
+      </a>
+    
+      <a href="cenik.html" class="block">
+        <img src="images/pngegg-3.png" alt="izolace staveb" loading="lazy">
+        <span>izolace staveb</span>
+      </a>
+    
+      <a href="cenik.html" class="block">
+        <img src="images/17FB6912-9193-46D1-A733-744808930FD4.png" alt="PVC roury a HT system" loading="lazy">
+        <span>PVC roury a HT system</span>
+      </a>
+    
+      <a href="cenik.html" class="block">
+        <img src="images/ikona5.png" alt="suchá stavba" loading="lazy">
+        <span>suchá stavba</span>
+      </a>
+    
+      <a href="cenik.html" class="block">
+        <img src="images/93AE82B4-0D36-4724-A009-7C2B7557E6BF.png" alt="tvarnice a cihly" loading="lazy">
+        <span>tvarnice a cihly</span>
+      </a>
+    
+      <a href="cenik.html" class="block">
+        <img src="images/23A0319E-D8B0-46B9-9DEF-7198896EDB20.png" alt="nářadí" loading="lazy">
+        <span>nářadí</span>
+      </a>
+    
+      <a href="cenik.html" class="block">
+        <img src="images/C4CD2298-B1C9-427F-8401-C9DAB9B37A4E.png" alt="zateplení" loading="lazy">
+        <span>zateplení</span>
+      </a>
+    </div>
+    <section class="about reveal">
+      <div class="about-wrapper">
+        <div class="about-text">
+          <h2>Jsme rodinná firma</h2>
+          <p>
+            Už více než 25 let pomáháme lidem stavět, rekonstruovat a budovat jejich sny. 
+            Zakládáme si na osobním přístupu, odbornosti a poctivých stavebních materiálech.
+          </p>
+          <p>
+            Ať už jste profík nebo domácí kutil, u nás najdete vždy podporu, kvalitní sortiment a férové ceny.
+          </p>
+          <a href="/onas.html" class="btn-more">Zjistit víc</a>
+        </div>
+        <div class="about-image">
+          <img src="/images/2020-11-26.png" alt="Naše firma" loading="lazy">
+        </div>
+      </div>
+    </section>
+
+     <section class="kontakt reveal">
+       <h2>Kontakt</h2>
+       <p>Telefon: +420 123 456 789<br>Email: info@stavebninylhotsky.cz</p>
+       <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1049.9400917733274!2d17.74784002303796!3d49.77588782965018!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4713cf9a73fa603d%3A0x8c0b1d7dc433e735!2sStavebniny%20Lhotsk%C3%BD%20-%20V%C3%ADtkov!5e1!3m2!1scs!2scz!4v1754246449743!5m2!1scs!2scz" width="1000" height="400" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+     </section>
+     <section class="oteviraci-doby reveal">
+      <div class="oteviraci-blok">
+        <h2>Stavebniny Vítkov</h2>
+        <table>
+          <tr><td>Pondělí</td><td>7:00 – 16:00</td></tr>
+          <tr><td>Úterý</td><td>7:00 – 16:00</td></tr>
+          <tr><td>Středa</td><td>7:00 – 16:00</td></tr>
+          <tr><td>Čtvrtek</td><td>7:00 – 16:00</td></tr>
+          <tr><td>Pátek</td><td>7:00 – 16:00</td></tr>
+          <tr><td>Sobota</td><td>7:00 - 11:00</td></tr>
+          <tr><td>Neděle</td><td>Zavřeno</td></tr>
+        </table>
+      </div>
+    
+      <div class="oteviraci-blok">
+        <h2>Stavebniny Budišov nad Budišovkou</h2>
+        <table>
+          <tr><td>Pondělí</td><td>8:00 – 16:00</td></tr>
+          <tr><td>Úterý</td><td>8:00 – 16:00</td></tr>
+          <tr><td>Středa</td><td>8:00 – 16:00</td></tr>
+          <tr><td>Čtvrtek</td><td>8:00 – 16:00</td></tr>
+          <tr><td>Pátek</td><td>8:00 – 16:00</td></tr>
+          <tr><td>Sobota</td><td>8:00 - 11:00</td></tr>
+          <tr><td>Neděle</td><td>Zavřeno</td></tr>
+        </table>
+      </div>
+    </section>
+     <section class="formular reveal">
+     <h2>Napište nám</h2>
+     <form
+     action="https://formspree.io/f/xblkwleg"
+     method="POST"
+   >
+     <label>
+       Váš email:
+       <input type="email" name="email">
+     </label>
+     <label>
+       Máte dotaz ?
+       <textarea name="message"></textarea>
+     </label>
+     <!-- your other form fields go here -->
+     <button type="submit">Send</button>
+   </form>
+  </section>
+   </main>
+
+   <footer>
+     &copy; 2025 Stavebniny Lhotský
+   </footer>
+  </div>
+  <script>
+  const navToggle = document.querySelector('.nav-toggle');
+  const mainNav = document.querySelector('.main-nav');
+
+  navToggle.addEventListener('click', () => {
+    mainNav.classList.toggle('show');
+  });
+
+  // Motiv (light/dark)
+  (function(){
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const stored = localStorage.getItem('theme');
+    const initial = stored || (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', initial);
+    const btn = document.getElementById('themeToggle');
+    if(btn){
+      btn.textContent = initial === 'dark' ? '🌙' : '☀️';
+      btn.addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        btn.textContent = next === 'dark' ? '🌙' : '☀️';
+      });
+    }
+  })();
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('show');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  
+  // Zobraz "Admin" jen pro přihlášeného admina
+  (async function(){
+    try{
+      const adminItem = document.getElementById('adminNavItem');
+      const adminFloating = document.getElementById('adminFloating');
+      if(!window.supabase) return;
+      const { data: { session } } = await window.supabase.auth.getSession();
+      if(!session) return;
+      const { data } = await window.supabase.from('profiles').select('role').eq('user_id', session.user.id).maybeSingle();
+      if(data && data.role === 'admin'){
+        if(adminItem) adminItem.style.display = '';
+        if(adminFloating) adminFloating.style.display = '';
+      }
+    }catch(e){ console.warn('Admin link check failed', e); }
+  })();
+  </script>
+  
+</body>
+</html>

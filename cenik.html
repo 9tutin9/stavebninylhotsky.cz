@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="cenik.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ceník | Stavebniny Lhotský</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&display=swap');
+</style>
+</head>
+<body>
+  <div class="obsah">
+    <header>
+      <div class="nav-container">
+        <div class="logo">
+         <a href="index.html">
+           <img src="images/logo.png" alt="Logo">
+         </a>
+        </div>
+        <button class="nav-toggle" aria-label="Otevřít menu">
+          <span class="hamburger"></span>
+        </button>
+       <nav class="main-nav">
+         <ul>
+           <li><a href="index.html">Úvod</a></li>
+           <li><a href="onas.html">O nás</a></li>
+           <li><a href="sluzby.html">Služby</a></li>
+           <li><a href="cenik.html">Ceník</a></li>
+           <div class="tlacitko">
+           <li><a href="kontakt.html">Kontakt</a></li>
+          </div>
+         </ul>
+       </nav>
+       <button id="themeToggle" class="theme-toggle" aria-label="Přepnout motiv" title="Přepnout motiv">☀️</button>
+      </div>
+   </header>
+<main>
+  <h2>ceny k vybraným produktům</h2>
+  <div id="price-filters">
+  <input id="search" type="search" placeholder="Hledat…" />
+  <select id="category"></select>
+  <button id="resetFilters" class="filter-reset" type="button" aria-label="Vyčistit filtrování">Reset</button>
+</div>
+
+<div id="pricelist"></div>
+
+<script>
+function fmtCZK(n){return new Intl.NumberFormat('cs-CZ',{style:'currency',currency:'CZK',maximumFractionDigits:0}).format(Number(n||0));}
+
+function hueFromName(name){
+  let h=0; for(let i=0;i<name.length;i++){ h=(h+name.charCodeAt(i)*(i+1))%360; }
+  return h;
+}
+
+async function loadCats(){
+  const { data, error } = await window.supabase.from('categories').select('id,name,order_index,is_active').eq('is_active', true);
+  if(error){ console.error(error); return new Map(); }
+  return new Map((data||[]).map(c=>[c.id, {name:c.name, order:c.order_index||0}]));
+}
+
+function groupAndSort(items, cats){
+  const byCat = new Map();
+  items.forEach(p=>{
+    const cid = p.category_id || 0;
+    const name = cats.get(cid)?.name || 'Ostatní';
+    const order = cats.get(cid)?.order ?? (p.cat_order ?? 9999);
+    if(!byCat.has(name)) byCat.set(name,{order, items:[]});
+    byCat.get(name).items.push(p);
+  });
+  const sortedCats = [...byCat.entries()].sort((a,b)=>{
+    if(a[1].order!==b[1].order) return (a[1].order||0)-(b[1].order||0);
+    return a[0].localeCompare(b[0],'cs');
+  });
+  sortedCats.forEach(([_,obj])=>{
+    obj.items.sort((x,y)=>{
+      const oi=(x.order_index||0)-(y.order_index||0);
+      return oi!==0 ? oi : String(x.name).localeCompare(String(y.name),'cs');
+    });
+  });
+  return sortedCats;
+}
+
+async function fetchProducts(){
+  const q = document.getElementById('search').value.trim();
+  const catVal = document.getElementById('category').value;
+  let query = window.supabase.from('products').select('*').eq('is_active', true);
+  if(q) query = query.ilike('name', `%${q}%`);
+  if(catVal) query = query.eq('category_id', Number(catVal));
+  const { data, error } = await query;
+  if(error){ console.error(error); return []; }
+  return data||[];
+}
+
+async function load(){
+  const [cats, items] = await Promise.all([loadCats(), fetchProducts()]);
+  const grouped = groupAndSort(items, cats);
+  const root = document.getElementById('pricelist');
+  root.innerHTML = '';
+  if(grouped.length===0){ root.innerHTML = '<p class="pricelist-empty">Žádné položky nenalezeny.</p>'; return; }
+  grouped.forEach(([catName, obj])=>{
+    const hue = hueFromName(catName);
+    const cards = obj.items.map(p=>`
+      <article class="card">
+        <div class="card-media">
+          ${p.image_url?`<img class="zoomable" loading="lazy" decoding="async" src="${p.image_url}" alt="${p.name}">`:`<div class="img-ph" aria-hidden="true"></div>`}
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">${p.name}${p.unit?` <span class="unit">(${p.unit})</span>`:''}</h3>
+          ${p.description?`<p class="desc">${p.description}</p>`:''}
+          ${p.note?`<p class="note">${p.note}</p>`:''}
+        </div>
+        <div class="card-price">
+          <div class="price-line"><span class="muted">bez DPH</span><span>${fmtCZK(p.price_without_vat)}</span></div>
+          <div class="price-line"><span class="muted">DPH</span><span>${p.vat_rate}%</span></div>
+          <div class="price-total"><span>od</span><strong>${fmtCZK(p.price_with_vat)}</strong></div>
+          <button class="btn-quote" data-id="${p.id}" data-name="${p.name}" data-unit="${p.unit||''}">Poptat</button>
+        </div>
+      </article>`).join('');
+    const section = `<section class="category"><h2 style="--cat-h:${hue}">${catName}<span class="badge-count">${obj.items.length}</span></h2><div class="cards">${cards}</div></section>`;
+    root.insertAdjacentHTML('beforeend', section);
+  });
+}
+
+(async function init(){
+  const cats = await loadCats();
+  const sel = document.getElementById('category');
+  sel.innerHTML = '<option value="">Všechny kategorie</option>' +
+    [...cats.entries()]
+      .sort((a,b)=> (a[1].order||0)-(b[1].order||0) || a[1].name.localeCompare(b[1].name,'cs'))
+      .map(([id,meta])=>`<option value="${id}">${meta.name}</option>`).join('');
+  document.addEventListener('input', e=>{ if(e.target.id==='search' || e.target.id==='category') load(); });
+  document.getElementById('resetFilters').addEventListener('click', ()=>{
+    document.getElementById('search').value = '';
+    document.getElementById('category').value = '';
+    load();
+  });
+  await load();
+})();
+</script>
+
+<style>
+/* Filtry */
+#price-filters{display:flex;gap:.75rem;margin:1rem 0;flex-wrap:wrap;align-items:center}
+#price-filters input,#price-filters select{
+  padding:.55rem .75rem;border:1px solid #ddd;border-radius:.5rem;background:#fff;min-width:12rem
+}
+#price-filters .filter-reset{padding:.55rem .9rem;border:1px solid rgba(0,0,0,.12);border-radius:.5rem;background:#fff;cursor:pointer;transition:background .2s ease,color .2s ease,border-color .2s ease}
+#price-filters .filter-reset:hover{background:#f9fafb;border-color:#e5e7eb}
+
+/* Sekce/kategorie */
+.category{margin:1.5rem 0}
+.category h2{display:inline-flex;gap:.5rem;align-items:center;margin:.5rem 0 1rem;font-size:1.05rem;line-height:1.2;text-transform:uppercase;letter-spacing:.06em;background:hsla(var(--cat-h, 30), 90%, 92%, .9);color:#111827;padding:.35rem .7rem;border-radius:999px;border:1px solid hsla(var(--cat-h, 30), 85%, 60%, .6)}
+.badge-count{display:inline-block;font-size:.8em;background:rgba(0,0,0,.06);color:#111827;padding:.1rem .5rem;border-radius:999px}
+html[data-theme='dark'] .category h2{background:rgba(247,148,30,.18);color:#e5e7eb;border-color:rgba(247,148,30,.4)}
+
+/* Grid karet – 5 sloupců na velkých, adaptivní níže */
+.cards{display:grid;gap:16px;grid-template-columns: repeat(5, 1fr)}
+@media (max-width: 1280px){.cards{grid-template-columns: repeat(4, 1fr)}}
+@media (max-width: 1024px){.cards{grid-template-columns: repeat(3, 1fr)}}
+@media (max-width: 720px){.cards{grid-template-columns: repeat(2, 1fr)}}
+@media (max-width: 420px){.cards{grid-template-columns: 1fr}}
+
+/* Karta */
+.card{display:flex;flex-direction:column;gap:10px;background:var(--color-surface);border:1px solid rgba(0,0,0,.08);border-radius:14px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.06)}
+.card-media{width:100%;aspect-ratio:4/3;background:linear-gradient(180deg,#f7f7f7,#efefef);position:relative;overflow:hidden}
+.card-media img{width:100%;height:100%;object-fit:cover;display:block}
+.img-ph{width:100%;height:100%;background:linear-gradient(135deg,#f0f0f0,#fafafa)}
+
+/* Bez animací/stagger efektů */
+
+.card-body{padding:12px 14px 0}
+.card-title{margin:0;font-size:1.05rem;font-weight:800;letter-spacing:.01em}
+.unit{color:#666;font-weight:400}
+.desc{color:#444;font-size:.95em;margin:.35rem 0 0;min-height:2.6em}
+.note{color:#666;font-size:.85em;margin:.25rem 0 0}
+
+/* Cena */
+.card-price{
+  margin:0 14px 14px;
+  border-top:1px dashed #eee;padding-top:10px;
+  display:flex;flex-direction:column;gap:6px
+}
+.price-line{display:flex;justify-content:space-between;gap:8px;font-size:.95em}
+.price-total{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.price-total span{font-size:.9em;color:#444}
+.price-total strong{font-size:1.15rem;background:var(--color-primary);color:#fff;border-radius:999px;padding:.3rem .6rem}
+
+/* Poptávka (FAB + modal) */
+.btn-quote{margin-top:8px;border:none;background:var(--color-primary);color:#fff;border-radius:10px;padding:.6rem .9rem;cursor:pointer;font-weight:800;letter-spacing:.02em;transition:filter .15s ease}
+.btn-quote:hover{filter:brightness(1.05)}
+.btn-quote:focus-visible{outline:3px solid rgba(247,148,30,.35);outline-offset:2px}
+.quote-fab{position:fixed;right:20px;bottom:20px;background:var(--gradient-primary);color:#fff;border:none;border-radius:999px;padding:.7rem 1rem  .7rem 1rem;box-shadow:var(--shadow-lg);cursor:pointer;display:none;align-items:center;gap:.5rem;z-index:1100}
+.quote-fab.show{display:inline-flex}
+.quote-fab #quoteCount{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:999px;background:rgba(0,0,0,.2);padding:0 .35rem}
+.quote-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:1200;padding:10px}
+.quote-modal.show{display:flex}
+.quote-dialog{background:var(--color-surface);color:var(--color-text);width:min(720px, 96vw);max-height:88vh;border-radius:14px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column}
+.quote-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(0,0,0,.06)}
+.quote-list{padding:10px 14px;display:flex;flex-direction:column;gap:8px;min-height:80px;max-height:40vh;overflow:auto}
+.q-item{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid rgba(0,0,0,.06);padding:8px 10px;border-radius:8px}
+.q-name{font-weight:700}
+.q-qty{display:flex;align-items:center;gap:8px}
+.q-btn{width:28px;height:28px;border-radius:6px;border:1px solid rgba(0,0,0,.1);background:#fff;cursor:pointer}
+.q-remove{border:none;background:transparent;color:#b91c1c;cursor:pointer}
+.quote-form{padding:10px 14px 14px;border-top:1px solid rgba(0,0,0,.06);display:flex;flex-direction:column;gap:10px}
+.quote-form .q-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.quote-form input,.quote-form textarea{border:1px solid #ddd;border-radius:8px;padding:10px;background:#fff;color:#111827}
+.quote-actions{display:flex;justify-content:flex-end}
+.btn-send{background:var(--color-primary);color:#fff;border:none;border-radius:8px;padding:.6rem 1rem;cursor:pointer}
+.btn-send[disabled]{opacity:.6;cursor:not-allowed;pointer-events:none}
+@media(max-width:720px){.quote-form .q-grid{grid-template-columns:1fr}}
+.quote-success{padding:20px 14px 28px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.quote-success .qs-icon{font-size:32px}
+
+.muted{color:#777}
+.pricelist-empty{color:#666;margin:1rem 0}
+
+/* Responsivita */
+@media (max-width:720px){.cards{gap:12px}.card-title{font-size:1rem}.price-total strong{font-size:1.05rem}}
+/* Lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:2000}
+.lightbox.show{display:flex}
+.lightbox img{max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.lightbox .close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.9);border:none;border-radius:999px;width:40px;height:40px;cursor:pointer;font-size:22px;line-height:40px}
+</style>
+  <h3 class="muted">Všechny ceny Vám rádi sdělíme osobně na jedné z našich poboček či v sekci kontakt</h3>
+  <div id="lightbox" class="lightbox" aria-modal="true" role="dialog">
+    <button class="close" aria-label="Zavřít">✕</button>
+    <img alt="Náhled" />
+  </div>
+  <button id="quoteFab" class="quote-fab" aria-label="Poptávka"><span id="quoteCount">0</span> Poptat</button>
+  <div id="quoteModal" class="quote-modal" aria-modal="true" role="dialog">
+    <div class="quote-dialog">
+      <div class="quote-header">
+        <h3>Poptávka</h3>
+        <button id="quoteClose" class="close" aria-label="Zavřít">✕</button>
+      </div>
+      <div id="quoteList" class="quote-list"></div>
+      <form id="quoteForm" action="https://formspree.io/f/xblkwleg" method="POST" class="quote-form">
+        <div class="q-grid">
+          <input required name="name" placeholder="Jméno a příjmení">
+          <input required type="email" name="email" placeholder="E‑mail">
+          <input name="phone" placeholder="Telefon">
+        </div>
+        <textarea name="note" placeholder="Poznámka k poptávce"></textarea>
+        <textarea id="quoteItemsField" name="message" style="display:none"></textarea>
+        <div class="quote-actions">
+          <button type="submit" class="btn-send">Odeslat poptávku</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+<footer>
+  &copy; 2025 Stavebniny Lhotský
+</footer>
+</div>
+<script>
+  const navToggle = document.querySelector('.nav-toggle');
+  const mainNav = document.querySelector('.main-nav');
+
+  navToggle.addEventListener('click', () => {
+    mainNav.classList.toggle('show');
+  });
+
+  // Motiv (light/dark)
+  (function(){
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const stored = localStorage.getItem('theme');
+    const initial = stored || (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', initial);
+    const btn = document.getElementById('themeToggle');
+    if(btn){
+      btn.textContent = initial === 'dark' ? '🌙' : '☀️';
+      btn.addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        btn.textContent = next === 'dark' ? '🌙' : '☀️';
+      });
+    }
+  })();
+
+  // Scroll reveal odstraněn
+
+  // Lightbox
+  const lb = document.getElementById('lightbox');
+  const lbImg = lb.querySelector('img');
+  const lbClose = lb.querySelector('.close');
+  function openLB(src, alt){ lbImg.src = src; lbImg.alt = alt||''; lb.classList.add('show'); }
+  function closeLB(){ lb.classList.remove('show'); lbImg.src=''; }
+  document.addEventListener('click', e=>{
+    const img = e.target.closest('img.zoomable');
+    if(img){ e.preventDefault(); openLB(img.src, img.alt); }
+  });
+  lb.addEventListener('click', e=>{ if(e.target===lb) closeLB(); });
+  lbClose.addEventListener('click', closeLB);
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLB(); });
+
+  // Poptávkový košík (lokálně, bez objednávky)
+  const fab = document.getElementById('quoteFab');
+  const m  = document.getElementById('quoteModal');
+  const mClose = document.getElementById('quoteClose');
+  const listBox = document.getElementById('quoteList');
+  const countEl = document.getElementById('quoteCount');
+  const itemsField = document.getElementById('quoteItemsField');
+  const form = document.getElementById('quoteForm');
+  let cart = [];
+
+  function persist(){ localStorage.setItem('quote_cart', JSON.stringify(cart)); }
+  function loadCart(){ try{ cart = JSON.parse(localStorage.getItem('quote_cart')||'[]'); }catch{ cart=[]; } }
+  function updateCount(){ countEl.textContent = String(cart.reduce((s,i)=> s + (i.qty||1), 0)); fab.classList.toggle('show', cart.length>0); }
+  function openQuote(){ m.classList.add('show'); renderList(); }
+  function closeQuote(){ m.classList.remove('show'); }
+  function addItem(prod){ const found = cart.find(i=> i.id===prod.id); if(found){ found.qty = (found.qty||1)+1; } else { cart.push({...prod, qty:1}); } persist(); updateCount(); }
+  function removeItem(id){ cart = cart.filter(i=> i.id!==id); persist(); updateCount(); renderList(); }
+  function changeQty(id, delta){ const it = cart.find(i=> i.id===id); if(!it) return; it.qty = Math.max(1, (it.qty||1)+delta); persist(); updateCount(); renderList(); }
+  function renderList(){
+    if(cart.length===0){ listBox.innerHTML = '<p class="muted">Košík je prázdný.</p>'; itemsField.value=''; return; }
+    listBox.innerHTML = cart.map(i=>`
+      <div class="q-item">
+        <div class="q-name">${i.name}${i.unit?` <span class="unit">(${i.unit})</span>`:''}</div>
+        <div class="q-qty">
+          <button type="button" class="q-btn" data-action="dec" data-id="${i.id}">−</button>
+          <span class="q-val">${i.qty||1}</span>
+          <button type="button" class="q-btn" data-action="inc" data-id="${i.id}">+</button>
+        </div>
+        <button type="button" class="q-remove" data-id="${i.id}">Odstranit</button>
+      </div>
+    `).join('');
+    // Sestav zprávu do pole message
+    const lines = cart.map(i=>`• ${i.name}${i.unit?` (${i.unit})`:''} × ${i.qty||1}`);
+    itemsField.value = `Poptávané položky:\n${lines.join('\n')}`;
+  }
+
+  document.addEventListener('click', e=>{
+    const btn = e.target.closest('.btn-quote');
+    if(btn){
+      addItem({ id: Number(btn.dataset.id), name: btn.dataset.name, unit: btn.dataset.unit||'' });
+      e.preventDefault();
+    }
+    if(e.target===fab) openQuote();
+    if(e.target===m) closeQuote();
+    if(e.target===mClose) closeQuote();
+    const dec = e.target.closest('.q-btn[data-action="dec"]');
+    if(dec) changeQty(Number(dec.dataset.id), -1);
+    const inc = e.target.closest('.q-btn[data-action="inc"]');
+    if(inc) changeQty(Number(inc.dataset.id), +1);
+    const rm = e.target.closest('.q-remove');
+    if(rm) removeItem(Number(rm.dataset.id));
+  });
+
+  form.addEventListener('submit', ()=>{ /* po odeslání necháme Formspree načíst svůj thank you */ localStorage.removeItem('quote_cart'); });
+
+  // EmailJS integrace – vyplňte vaše údaje
+  const EMAILJS_SERVICE_ID = 'service_2m0ehr5';
+  const EMAILJS_TEMPLATE_ADMIN = 'template_nmx6i5o';
+  const EMAILJS_TEMPLATE_CUSTOMER = 'template_hwmz4u9';
+  const EMAILJS_PUBLIC_KEY = 'W_ilTd3ywbbkGEhd2';
+  try { if(window.emailjs && EMAILJS_PUBLIC_KEY!=='YOUR_PUBLIC_KEY') emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); } catch(_e) {}
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const submitBtn = form.querySelector('.btn-send');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Zpracovávám…';
+    submitBtn.setAttribute('disabled', 'disabled');
+    let sentOk = false;
+    const fd = new FormData(form);
+    const customer_name = String(fd.get('name')||'').trim();
+    const customer_email = String(fd.get('email')||'').trim();
+    const phone = String(fd.get('phone')||'').trim();
+    const note = String(fd.get('note')||'').trim();
+    const items_text = itemsField.value || '';
+
+    const common = { customer_name, customer_email, phone, note, items_text, subject: `Poptávka z webu – ${customer_name}` };
+    try {
+      if(EMAILJS_PUBLIC_KEY!=='YOUR_PUBLIC_KEY'){
+        // zpráva pro admina
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ADMIN, common);
+        // potvrzení pro zákazníka
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_CUSTOMER, common);
+        // úspěch: změň tlačítko na Odesláno, vyčisti a po chvilce zavři modal
+        localStorage.removeItem('quote_cart'); cart=[]; updateCount(); renderList(); form.reset();
+        submitBtn.textContent = 'Odesláno ✓';
+        sentOk = true;
+        setTimeout(()=>{ closeQuote(); submitBtn.textContent = originalText; submitBtn.removeAttribute('disabled'); }, 1600);
+      } else {
+        // Fallback: pokud klíče nejsou vyplněny, necháme běžet Formspree
+        form.removeEventListener('submit', arguments.callee);
+        form.submit();
+      }
+    } catch(err){
+      console.error(err);
+      alert('Omlouváme se, odeslání selhalo. Zkuste to prosím znovu.');
+    } finally {
+      // když nebyl úspěch, obnov tlačítko hned
+      if(!sentOk){
+        submitBtn.textContent = originalText;
+        submitBtn.removeAttribute('disabled');
+      }
+    }
+  });
+
+  loadCart();
+  updateCount();
+</script>
+</body>
+</html>

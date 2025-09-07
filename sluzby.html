@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="sluzby.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Služby | Stavebniny Lhotský</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet"/>
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&display=swap');
+</style>
+</head>
+<body>
+  <div class="obsah">
+    <header>
+      <div class="nav-container">
+        <div class="logo">
+         <a href="index.html">
+           <img src="images/logo.png" alt="Logo">
+         </a>
+        </div>
+        <button class="nav-toggle" aria-label="Otevřít menu">
+          <span class="hamburger"></span>
+        </button>
+       <nav class="main-nav">
+         <ul>
+           <li><a href="index.html">Úvod</a></li>
+           <li><a href="onas.html">O nás</a></li>
+           <li><a href="sluzby.html">Služby</a></li>
+           <li><a href="cenik.html">Ceník</a></li>
+           <div class="tlacitko">
+           <li><a href="kontakt.html">Kontakt</a></li>
+          </div>
+         </ul>
+       </nav>
+       <button id="themeToggle" class="theme-toggle" aria-label="Přepnout motiv" title="Přepnout motiv">☀️</button>
+      </div>
+     <img src="images/obujte se s námi.png" alt="Baner" class="responsive-banner">
+   </header>
+   <main>
+    <section id="sluzby-grid" class="reveal">
+      <div class="sluzba">
+        <a href="kontakt.html">
+        <div class="sluzba-ikona">🧱</div>
+        <h2>Prodej stavebních materiálů</h2>
+        <p>Široký výběr cihel, malt, lepidel, sádrokartonu a izolací pro všechny projekty.</p>
+      </a>
+      </div>
+    
+        
+      <div class="sluzba">
+        <a href="kontakt.html">
+        <div class="sluzba-ikona">🚚</div>
+        <h2>Doprava a vykládka</h2>
+        <p>Doprava materiálu na stavbu včetně vykládky hydraulickou rukou.</p>
+      </a>
+      </div>
+    
+      <div class="sluzba">
+        <a href="kontakt.html">
+        <div class="sluzba-ikona">🪚</div>
+        <h2>Míchání a řezání na míru</h2>
+        <p>Míchání omítek a barev, řezání dřeva, OSB a sádrokartonu na míru.</p>
+      </a>
+      </div>
+    
+      <div class="sluzba">
+        <a href="kontakt.html">
+        <div class="sluzba-ikona">🔧</div>
+        <h2>Půjčovna nářadí</h2>
+        <p>Vibrační desky, míchačky, řezačky, lešení a elektrické nářadí k zapůjčení.</p>
+      </a>
+      </div>
+    
+      <div class="sluzba">
+        <a href="kontakt.html">
+        <div class="sluzba-ikona">📐</div>
+        <h2>Odborné poradenství</h2>
+        <p>Pomoc s výběrem materiálu, kalkulace spotřeby, technické poradenství.</p>
+      </a>
+      </div>
+    
+      <div class="sluzba">
+        <div class="sluzba-ikona">💳</div>
+        <h2>Slevy a věrnostní program</h2>
+        <p>Výhodné ceny pro stálé zákazníky a množstevní slevy.</p>
+      </div>
+    
+      <div class="sluzba">
+        <a href="kontakt.html">
+        <div class="sluzba-ikona">📦</div>
+        <h2>Objednávky na zakázku</h2>
+        <p>Zajištění speciálního materiálu od dodavatelů a rezervace zboží.</p>
+      </a>
+      </div>
+    
+      <div class="sluzba">
+        <a href="kontakt.html">
+        <div class="sluzba-ikona">🌱</div>
+        <h2>Sezónní sortiment</h2>
+        <p>V zimě posypová sůl, v létě zahradní dlažby, obrubníky a další.</p>
+      </a>
+      </div>
+    </section>
+   </main>
+   <footer>
+   &copy; 2025 Stavebniny Lhotský
+   </footer>
+  </div>
+  <script>
+    const navToggle = document.querySelector('.nav-toggle');
+    const mainNav = document.querySelector('.main-nav');
+  
+    navToggle.addEventListener('click', () => {
+      mainNav.classList.toggle('show');
+    });
+
+    // Motiv (light/dark)
+    (function(){
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const stored = localStorage.getItem('theme');
+      const initial = stored || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', initial);
+      const btn = document.getElementById('themeToggle');
+      if(btn){
+        btn.textContent = initial === 'dark' ? '🌙' : '☀️';
+        btn.addEventListener('click', () => {
+          const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+          const next = cur === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          localStorage.setItem('theme', next);
+          btn.textContent = next === 'dark' ? '🌙' : '☀️';
+        });
+      }
+    })();
+
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if(entry.isIntersecting){
+          entry.target.classList.add('show');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
