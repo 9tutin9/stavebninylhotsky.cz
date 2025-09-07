@@ -167,6 +167,16 @@ html[data-theme='dark'] .category h2{background:rgba(247,148,30,.18);color:#e5e7
 @media (max-width: 420px){.cards{grid-template-columns: repeat(2, 1fr)}}
 @media (max-width: 340px){.cards{grid-template-columns: 1fr}}
 
+/* Mobilní úpravy – menší mezery po stranách, širší karty */
+@media (max-width: 480px){
+  .obsah{padding:0 12px}
+  #price-filters{margin-left:0;margin-right:0}
+  .category{margin:1rem 0}
+  .cards{gap:12px}
+  .card-body{padding:10px 12px 0}
+  .card-price{margin:0 12px 12px}
+}
+
 /* Karta */
 .card{display:flex;flex-direction:column;gap:10px;background:var(--color-surface);border:1px solid rgba(0,0,0,.08);border-radius:14px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.06)}
 .card-media{width:100%;aspect-ratio:4/3;background:linear-gradient(180deg,#f7f7f7,#efefef);position:relative;overflow:hidden}
