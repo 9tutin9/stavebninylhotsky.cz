@@ -183,11 +183,10 @@
     mainNav.classList.toggle('show');
   });
 
-  // Motiv (light/dark)
+  // Motiv (light/dark) – výchozí světle
   (function(){
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     const stored = localStorage.getItem('theme');
-    const initial = stored || (prefersDark ? 'dark' : 'light');
+    const initial = stored || 'light';
     document.documentElement.setAttribute('data-theme', initial);
     const btn = document.getElementById('themeToggle');
     if(btn){

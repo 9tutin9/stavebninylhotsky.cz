@@ -269,11 +269,10 @@ html[data-theme='dark'] .category h2{background:rgba(247,148,30,.18);color:#e5e7
     mainNav.classList.toggle('show');
   });
 
-  // Motiv (light/dark)
+  // Motiv (light/dark) – výchozí světle
   (function(){
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     const stored = localStorage.getItem('theme');
-    const initial = stored || (prefersDark ? 'dark' : 'light');
+    const initial = stored || 'light';
     document.documentElement.setAttribute('data-theme', initial);
     const btn = document.getElementById('themeToggle');
     if(btn){
