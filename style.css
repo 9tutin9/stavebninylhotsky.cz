@@ -422,10 +422,10 @@ html[data-theme='dark'] .theme-toggle {
 }
 
 .obsah {
-  max-width: 1400px;
+  max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
-  padding: 0 20px;
+  padding: 0 32px; /* větší vnitřní odsazení */
 }
 
 /* fonty globálně */
